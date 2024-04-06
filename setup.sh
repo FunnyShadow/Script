@@ -66,6 +66,7 @@ print_log() {
     esac
 }
 
+# Error handler
 error_handler() {
     local err_line=$1;
     print_log "FATAL" "An unexpected error occurred!";
@@ -75,6 +76,7 @@ error_handler() {
 
 trap 'error_handler "$LINENO"' ERR;
 
+# Arch checker
 check_arch(){
     case "${arch}" in
         x86_64)
@@ -101,35 +103,81 @@ check_arch(){
     return 0;
 }
 
+# System checker (WIP)
 check_system(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
+# Network checker (WIP)
 check_network(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
+# Dependency checker (WIP)
 check_deps(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
+# Root checker
 check_root(){
-    print_log "ERROR" "Not implemented yet";
-    return 1;
+    if [[ ${EUID} -ne 0 ]]; then
+        print_log "ERROR" "Please use the root user to execute this script!";
+        return 1;
+    fi
+    return 0;
 }
 
+# Old installation checker
 check_old_install(){
     if [[ -d "${root_install_path}" ]]; then
         old_install=true;
     fi
 }
 
+# Migratior (WIP)
 migration_old_mcsmanager(){
     print_log "ERROR" "Not implemented yet";
     return 1;
+}
+
+# Node dependency installer
+install_npm_packages() {
+    local install_path=$1
+    if cd "${install_path}"; then
+        /usr/bin/env "${node_install_path}"/bin/node "${node_install_path}"/bin/npm install --production --no-fund --no-audit >npm_install_log
+    else
+        print_log "ERROR" "Failed to change directory to ${install_path}";
+        return 1;
+    fi
+    
+    return 0;
+}
+
+# Service file creator
+create_service_file() {
+    local file_name=$1
+    local service_name=$2
+    local working_directory=$3
+    # shellcheck disable=SC2250,SC2154
+    cat << EOF > "/etc/systemd/system/${file_name}"
+[Unit]
+Description=${service_name}
+
+[Service]
+WorkingDirectory=${working_directory}
+ExecStart=${node_install_path}/bin/node app.js
+ExecReload=/bin/kill -s QUIT $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+Environment="PATH=${PATH}"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    return 0;
 }
 
 # File downloader
@@ -143,6 +191,9 @@ download_file(){
     fi
     return 0;
 }
+
+## Install
+# Node.js installer
 install_node() {
     print_log "INFO" "Installing Node.js ${node_version} ...";
     
@@ -184,6 +235,7 @@ install_node() {
     return 0;
 }
 
+# MCSManager installer
 install_mcsmanager() {
     print_log "INFO" "Installing MCSManager ...";
     
@@ -223,41 +275,6 @@ install_mcsmanager() {
     create_service_file "mcsm-web.service" "MCSManager-Web" "/opt/mcsmanager/web"
     create_service_file "mcsm-daemon.service" "MCSManager-Daemon" "/opt/mcsmanager/daemon"
     systemctl daemon-reload
-    
-    return 0;
-}
-
-install_npm_packages() {
-    local install_path=$1
-    if cd "${install_path}"; then
-        /usr/bin/env "${node_install_path}"/bin/node "${node_install_path}"/bin/npm install --production --no-fund --no-audit >npm_install_log
-    else
-        print_log "ERROR" "Failed to change directory to ${install_path}";
-        return 1;
-    fi
-    
-    return 0;
-}
-
-create_service_file() {
-    local file_name=$1
-    local service_name=$2
-    local working_directory=$3
-    # shellcheck disable=SC2250,SC2154
-    cat << EOF > "/etc/systemd/system/${file_name}"
-[Unit]
-Description=${service_name}
-
-[Service]
-WorkingDirectory=${working_directory}
-ExecStart=${node_install_path}/bin/node app.js
-ExecReload=/bin/kill -s QUIT $MAINPID
-ExecStop=/bin/kill -s QUIT $MAINPID
-Environment="PATH=${PATH}"
-
-[Install]
-WantedBy=multi-user.target
-EOF
     
     return 0;
 }
