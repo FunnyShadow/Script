@@ -132,6 +132,53 @@ migration_old_mcsmanager(){
     return 1;
 }
 
+install_node() {
+    print_log "INFO" "Installing Node.js ${node_version} ...";
+    
+    # Download Node.js
+    if ${DEBUG}; then
+        wget "${node_download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -v -O "${tmp_path}/node.tar.gz";
+        wget "${node_hash_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -v -O "${tmp_path}/node.sha256";
+    else
+        wget "${node_download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -O"${tmp_path}/node.tar.gz";
+        wget "${node_hash_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -O "${tmp_path}/node.sha256";
+    fi
+    
+    # Check Node.js integrity
+    local offical_hash
+    local file_hash
+    offical_hash=$(grep "node-${node_version}-linux-${arch}.tar.gz" "${tmp_path}/node.sha256" | awk '{ print $1 }');
+    file_hash=$(sha256sum "${tmp_path}/node.tar.gz" | awk '{ print $1 }');
+    if [[ "${offical_hash}" != "${file_hash}" ]]; then
+        print_log "ERROR" "Node.js checksum failure!"
+        print_log "ERROR" "Expected: ${offical_hash}";
+        print_log "ERROR" "Actual: ${file_hash}";
+        return 1;
+    fi
+    
+    # Install Node.js
+    if ${DEBUG}; then
+        tar -zxvf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
+    else
+        tar -zxf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
+    fi
+    
+    # Set permissions
+    chmod +x "${node_install_path}/bin/node";
+    chmod +x "${node_install_path}/bin/npm";
+    
+    # Check Node.js installation
+    if [[ -f "${node_install_path}"/bin/node ]] && [[ "$("${node_install_path}"/bin/node -v)" == "${node_version}" ]]; then
+        print_log "INFO" "Node.js ${node_version} installed successfully!";
+    else
+        print_log "ERROR" "Node.js installation failed!";
+        return 1;
+    fi
+    
+    return 0;
+}
+
+
 [Service]
 WorkingDirectory=/opt/mcsmanager/web
 ExecStart=${node_install_path}/bin/node app.js
