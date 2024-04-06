@@ -75,6 +75,33 @@ error_handler() {
 
 trap 'error_handler "$LINENO"' ERR;
 
+check_arch(){
+    case "${arch}" in
+        x86_64)
+            arch=x64;
+        ;;
+        aarch64)
+            arch=arm64;
+        ;;
+        arm)
+            arch=armv7l;
+        ;;
+        ppc64le)
+            arch=ppc64le;
+        ;;
+        s390x)
+            arch=s390x;
+        ;;
+        *)
+            print_log "ERROR" "Unsupported architecture!";
+            print_log "ERROR" "Please try to install manually: https://github.com/MCSManager/MCSManager#linux";
+            return 1;
+        ;;
+    esac
+    return 0;
+}
+
+
 [Service]
 WorkingDirectory=/opt/mcsmanager/web
 ExecStart=${node_install_path}/bin/node app.js
