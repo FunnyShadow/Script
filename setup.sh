@@ -1,132 +1,34 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2312
+# shellcheck enable=all
+###########################
+### Variables
+## Features
+DEBUG=false;
 
-mcsmanager_install_path="/opt/mcsmanager"
-mcsmanager_donwload_addr="http://oss.duzuii.com/d/MCSManager/MCSManager/MCSManager-v10-linux.tar.gz"
-package_name="MCSManager-v10-linux.tar.gz"
-node="v16.20.2"
+## Paths
+root_install_path="/opt/mcsmanager";
+node_install_path="${root_install_path}/node/${node_version}";
+web_install_path="${root_install_path}/web";
+daemon_install_path="${root_install_path}/daemon";
+tmp_path="/tmp/mcsmanager";
 
-error=""
-arch=$(uname -m)
+## URLs
+mcsmanager_download_url="http://oss.duzuii.com/d/MCSManager/MCSManager/MCSManager-v10-linux.tar.gz";
+mcsmanager_hash_url="";
+node_download_url="https://nodejs.org/dist/${node_version}/node-${node_version}-linux-${arch}.tar.gz";
+node_hash_url="https://nodejs.org/dist/${node_version}/SHASUMS256.txt";
 
-printf "\033c"
+## Versions
+node_version="v16.20.2";
 
-echo_cyan() {
-  printf '\033[1;36m%b\033[0m\n' "$@"
-}
-echo_red() {
-  printf '\033[1;31m%b\033[0m\n' "$@"
-}
+## Script
+# DO NOT MODIFY
+old_install=false
+network=false
+public_ip=$(curl -s http://ipecho.net/plain)
+private_ip=$(hostname -i | awk '{print $1}')
 
-echo_green() {
-  printf '\033[1;32m%b\033[0m\n' "$@"
-}
-
-echo_cyan_n() {
-  printf '\033[1;36m%b\033[0m' "$@"
-}
-
-echo_yellow() {
-  printf '\033[1;33m%b\033[0m\n' "$@"
-}
-
-# script info
-echo_cyan "+----------------------------------------------------------------------
-| MCSManager Installer
-+----------------------------------------------------------------------
-"
-
-Red_Error() {
-  echo '================================================='
-  printf '\033[1;31;40m%b\033[0m\n' "$@"
-  echo '================================================='
-  exit 1
-}
-
-Install_Node() {
-  echo_cyan_n "[+] Install Node.JS environment...\n"
-
-  sudo rm -irf "$node_install_path"
-
-  cd /opt || exit
-
-  rm -rf node-"$node"-linux-"$arch".tar.gz
-
-  wget https://nodejs.org/dist/"$node"/node-"$node"-linux-"$arch".tar.gz
-
-  tar -zxf node-"$node"-linux-"$arch".tar.gz
-
-  rm -rf node-"$node"-linux-"$arch".tar.gz
-
-  if [[ -f "$node_install_path"/bin/node ]] && [[ "$("$node_install_path"/bin/node -v)" == "$node" ]]; then
-    echo_green "Success"
-  else
-    echo_red "Failed"
-    Red_Error "[x] Node installation failed!"
-  fi
-
-  echo
-  echo_yellow "=============== Node.JS Version ==============="
-  echo_yellow " node: $("$node_install_path"/bin/node -v)"
-  echo_yellow " npm: v$(/usr/bin/env "$node_install_path"/bin/node "$node_install_path"/bin/npm -v)"
-  echo_yellow "=============== Node.JS Version ==============="
-  echo
-
-  sleep 3
-}
-
-Install_MCSManager() {
-  echo_cyan "[+] Install MCSManager..."
-
-  # stop service
-  sudo systemctl stop mcsm-{web,daemon}
-  sudo systemctl disable mcsm-{web,daemon}
-
-  # delete service
-  sudo rm -rf /etc/systemd/system/mcsm-daemon.service
-  sudo rm -rf /etc/systemd/system/mcsm-web.service
-  sudo systemctl daemon-reload
-
-  mkdir -p ${mcsmanager_install_path} || exit
-
-  # cd /opt/mcsmanager
-  cd ${mcsmanager_install_path} || exit
-
-  # donwload MCSManager release
-  wget ${mcsmanager_donwload_addr}
-  tar -zxf ${package_name} -o || exit
-  rm -rf "${mcsmanager_install_path}/${package_name}"
-
-  # echo "[→] cd daemon"
-  cd daemon || exit
-
-  echo_cyan "[+] Install MCSManager-Daemon dependencies..."
-  /usr/bin/env "$node_install_path"/bin/node "$node_install_path"/bin/npm install --production --no-fund --no-audit >npm_install_log
-
-  # echo "[←] cd .."
-  cd ../web || exit
-
-  echo_cyan "[+] Install MCSManager-Web dependencies..."
-  /usr/bin/env "$node_install_path"/bin/node "$node_install_path"/bin/npm install --production --no-fund --no-audit >npm_install_log
-
-  echo
-  echo_yellow "=============== MCSManager ==============="
-  echo_green " Daemon: ${mcsmanager_install_path}/daemon"
-  echo_green " Web: ${mcsmanager_install_path}/web"
-  echo_yellow "=============== MCSManager ==============="
-  echo
-  echo_green "[+] MCSManager installation success!"
-
-  sudo chmod -R 755 /opt/mcsmanager/
-
-  sleep 3
-}
-
-Create_Service() {
-  echo_cyan "[+] Create MCSManager service..."
-  echo_cyan "[!] Try to register to the "systemctl", This comomand require \"root\" permission."
-
-  sudo echo "[Unit]
-Description=MCSManager-Daemon
 
 [Service]
 WorkingDirectory=/opt/mcsmanager/daemon
