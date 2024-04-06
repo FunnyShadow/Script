@@ -28,6 +28,7 @@ old_install=false
 network=false
 public_ip=$(curl -s http://ipecho.net/plain)
 private_ip=$(hostname -i | awk '{print $1}')
+arch=$(uname -m)
 
 
 ### Functions
@@ -70,7 +71,7 @@ print_log() {
 error_handler() {
     local err_line=$1;
     print_log "FATAL" "An unexpected error occurred!";
-    print_log "FATAL" "Error line: ${err_line}";
+    print_log "DEBUG" "Error line: ${err_line}";
     exit 1;
 }
 
@@ -85,6 +86,8 @@ migration_old_mcsmanager(){
 # Node dependency installer
 install_npm_packages() {
     local install_path=$1
+    print_log "DEBUG" "Installing NPM packages...";
+    print_log "DEBUG" "Install path: ${install_path}";
     if cd "${install_path}"; then
         /usr/bin/env "${node_install_path}"/bin/node "${node_install_path}"/bin/npm install --production --no-fund --no-audit > npm_install_log
     else
@@ -100,7 +103,27 @@ create_service_file() {
     local file_name=$1
     local service_name=$2
     local working_directory=$3
+    print_log "DEBUG" "Creating service file...";
+    print_log "DEBUG" "File name: ${file_name}";
+    print_log "DEBUG" "Service name: ${service_name}";
+    print_log "DEBUG" "Working directory: ${working_directory}";
     # shellcheck disable=SC2250,SC2154
+    if ${DEBUG}; then
+        cat << EOF | tee "/etc/systemd/system/${file_name}"
+[Unit]
+Description=${service_name}
+
+[Service]
+WorkingDirectory=${working_directory}
+ExecStart=${node_install_path}/bin/node app.js
+ExecReload=/bin/kill -s QUIT $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+Environment="PATH=${PATH}"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    else
         cat << EOF > "/etc/systemd/system/${file_name}"
 [Unit]
 Description=${service_name}
@@ -115,6 +138,7 @@ Environment="PATH=${PATH}"
 [Install]
 WantedBy=multi-user.target
 EOF
+    fi
     
     return 0;
 }
@@ -123,6 +147,10 @@ EOF
 download_file(){
     local download_url=$1;
     local file_name=$2;
+    print_log "DEBUG" "Downloading file...";
+    print_log "DEBUG" "Download URL: ${download_url}";
+    print_log "DEBUG" "File name: ${file_name}";
+    print_log "DEBUG" "File saved path: ${tmp_path}/${file_name}"
     if ${DEBUG}; then
         wget "${download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -v -O "${tmp_path}/${file_name}";
     else
@@ -217,7 +245,9 @@ install_node() {
     sudo chmod -R 755 "${node_install_path}";
     
     # Check Node.js installation
-    if [[ -f "${node_install_path}"/bin/node ]] && [[ "$("${node_install_path}"/bin/node -v)" == "${node_version}" ]]; then
+    print_log "DEBUG" Node.js version: "$("${node_install_path}/bin/node" -v)"
+    print_log "DEBUG" NPM version: "$("${node_install_path}/bin/node ${node_install_path}/bin/npm" -v)"
+    if [[ -f "${node_install_path}"/bin/node ]] && [[ "$("${node_install_path}/bin/node" -v)" == "${node_version}" ]]; then
         print_log "INFO" "Node.js ${node_version} installed successfully!";
     else
         print_log "ERROR" "Node.js installation failed!";
@@ -273,6 +303,10 @@ install_mcsmanager() {
 }
 
 ### Main
+print_log "DEBUG" "Public IP: ${public_ip}";
+print_log "DEBUG" "Private IP: ${private_ip}";
+print_log "DEBUG" "Architecture: ${arch}";
+
 print_log "INFO" "+----------------------------------------------------------------------";
 print_log "INFO" "| MCSManager Installer";
 print_log "INFO" "+----------------------------------------------------------------------";
