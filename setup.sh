@@ -260,3 +260,25 @@ EOF
     
     return 0;
 }
+
+### Main
+print_log "INFO" "+----------------------------------------------------------------------";
+print_log "INFO" "| MCSManager Installer";
+print_log "INFO" "+----------------------------------------------------------------------";
+
+# still in development
+
+print_log "INFO" "+----------------------------------------------------------------------"
+print_log "INFO" "| Installation is complete! Welcome to the MCSManager!!!"
+print_log "INFO" "|"
+print_log "INFO" "| HTTP Web Service: http://${public_ip}:23333 or http://${private_ip}:23333"
+print_log "INFO" "| Daemon Address: ws://${public_ip}:24444 or ws://${private_ip}:24444"
+print_log "INFO" "| You must expose ports 23333 and 24444 to use the service properly on the Internet."
+print_log "INFO" "|"
+print_log "INFO" "| Usage:"
+print_log "INFO" "| systemctl start mcsm-{daemon,web}.service"
+print_log "INFO" "| systemctl stop mcsm-{daemon,web}.service"
+print_log "INFO" "| systemctl restart mcsm-{daemon,web}.service"
+print_log "INFO" "|"
+print_log "INFO" "| Official Document: https://docs.mcsmanager.com/"
+print_log "INFO" "+----------------------------------------------------------------------"
