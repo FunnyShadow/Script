@@ -132,17 +132,23 @@ migration_old_mcsmanager(){
     return 1;
 }
 
+# File downloader
+download_file(){
+    local download_url=$1;
+    local file_name=$2;
+    if ${DEBUG}; then
+        wget "${download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -v -O "${tmp_path}/${file_name}";
+    else
+        wget "${download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -O"${tmp_path}/${file_name}";
+    fi
+    return 0;
+}
 install_node() {
     print_log "INFO" "Installing Node.js ${node_version} ...";
     
     # Download Node.js
-    if ${DEBUG}; then
-        wget "${node_download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -v -O "${tmp_path}/node.tar.gz";
-        wget "${node_hash_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -v -O "${tmp_path}/node.sha256";
-    else
-        wget "${node_download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -O"${tmp_path}/node.tar.gz";
-        wget "${node_hash_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -O "${tmp_path}/node.sha256";
-    fi
+    download_file "${node_download_url}" "node.tar.gz";
+    download_file "${node_hash_url}" "node.sha256";
     
     # Check Node.js integrity
     local offical_hash
@@ -182,13 +188,8 @@ install_mcsmanager() {
     print_log "INFO" "Installing MCSManager ...";
     
     # Download MCSManager
-    if ${DEBUG}; then
-        wget "${mcsmanager_download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -v -O "${tmp_path}/mcsmanager.tar.gz";
-        wget "${mcsmanager_hash_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -v -O "${tmp_path}/mcsmanager.sha256";
-    else
-        wget "${mcsmanager_download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -O "${tmp_path}/mcsmanager.tar.gz";
-        wget "${mcsmanager_hash_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -O "${tmp_path}/mcsmanager.sha256";
-    fi
+    download_file "${mcsmanager_download_url}" "mcsmanager.tar.gz";
+    download_file "${mcsmanager_hash_url}" "mcsmanager.sha256";
     
     # Check MCSManager integrity
     local offical_hash
