@@ -34,7 +34,7 @@ arch=$(uname -m)
 ### Functions
 ## Utils
 # Logger
-print_log() {
+function print_log() {
     local level=$1;
     local message=$2;
     
@@ -68,7 +68,7 @@ print_log() {
 }
 
 # Error handler
-error_handler() {
+function error_handler() {
     local err_line=$1;
     print_log "FATAL" "An unexpected error occurred!";
     print_log "DEBUG" "Error line: ${err_line}";
@@ -78,13 +78,13 @@ error_handler() {
 trap 'error_handler "$LINENO"' ERR;
 
 # Migratior (WIP)
-migration_old_mcsmanager(){
+function migration_old_mcsmanager(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
 # Node dependency installer
-install_npm_packages() {
+function install_npm_packages() {
     local install_path=$1
     print_log "DEBUG" "Installing NPM packages...";
     print_log "DEBUG" "Install path: ${install_path}";
@@ -99,7 +99,7 @@ install_npm_packages() {
 }
 
 # Service file creator
-create_service_file() {
+function create_service_file() {
     local file_name=$1
     local service_name=$2
     local working_directory=$3
@@ -144,7 +144,7 @@ EOF
 }
 
 # File downloader
-download_file(){
+function download_file(){
     local download_url=$1;
     local file_name=$2;
     print_log "DEBUG" "Downloading file...";
@@ -162,7 +162,7 @@ download_file(){
 
 ## Checks
 # Arch check
-check_arch(){
+function check_arch(){
     case "${arch}" in
         x86_64)
             arch=x64;
@@ -189,25 +189,25 @@ check_arch(){
 }
 
 # System check (WIP)
-check_system(){
+function check_system(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
 # Network check (WIP)
-check_network(){
+function check_network(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
 # Dependency check (WIP)
-check_deps(){
+function check_deps(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
 # Old installation check
-check_old_install(){
+function check_old_install(){
     if [[ -d "${root_install_path}" ]]; then
         old_install=true;
     fi
@@ -215,7 +215,7 @@ check_old_install(){
 
 ## Install
 # Node.js installer
-install_node() {
+function install_node() {
     print_log "INFO" "Installing Node.js ${node_version} ...";
     
     # Download Node.js
@@ -258,7 +258,7 @@ install_node() {
 }
 
 # MCSManager installer
-install_mcsmanager() {
+function install_mcsmanager() {
     print_log "INFO" "Installing MCSManager ...";
     
     # Download MCSManager
