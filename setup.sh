@@ -30,19 +30,41 @@ public_ip=$(curl -s http://ipecho.net/plain)
 private_ip=$(hostname -i | awk '{print $1}')
 
 
-[Service]
-WorkingDirectory=/opt/mcsmanager/daemon
-ExecStart=${node_install_path}/bin/node app.js
-ExecReload=/bin/kill -s QUIT $MAINPID
-ExecStop=/bin/kill -s QUIT $MAINPID
-Environment=\"PATH=${PATH}\"
-
-[Install]
-WantedBy=multi-user.target
-" >/etc/systemd/system/mcsm-daemon.service
-
-  sudo echo "[Unit]
-Description=MCSManager-Web
+### Functions
+## Utils
+# Logger
+print_log() {
+    local level=$1;
+    local message=$2;
+    
+    case "$1" in
+        "DEBUG")
+            if ${DEBUG}; then
+                printf "\033[90m[ \033[96mDEBUG\033[0m \033[90m] \033[96m%s\033[0m\n" "$2";
+            fi
+            return 0;
+        ;;
+        "INFO")
+            printf "\033[90m[ \033[92mINFO\033[0m \033[90m] \033[92m%s\033[0m\n" "$2";
+            return 0;
+        ;;
+        "WARN")
+            printf "\033[90m[ \033[93mWARN\033[0m \033[90m] \033[93m%s\033[0m\n" "$2";
+            return 0;
+        ;;
+        "ERROR")
+            printf "\033[90m[ \033[91mERROR\033[0m \033[90m] \033[91m%\033[0m\n" "$2";
+            return 0;
+        ;;
+        "FATAL")
+            printf "\033[90m[ \033[41m\033[37mFATAL\033[0m \033[90m] \033[41m\033[37m%s\033[0m\n" "$2";
+            return 0;
+        ;;
+        *)
+            printf "\033[90m[ \033[41m\033[37mFATAL\033[0m \033[90m] \033[41m\033[37m%s\033[0m\n" "Unable to recognize log level! Please check the script!"
+            exit 1;
+    esac
+}
 
 [Service]
 WorkingDirectory=/opt/mcsmanager/web
