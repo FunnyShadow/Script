@@ -242,6 +242,7 @@ function install_node() {
     fi
     
     # Set permissions
+    sudo chown -R 1000:1000 "${node_install_path}";
     sudo chmod -R 755 "${node_install_path}";
     
     # Check Node.js installation
@@ -291,6 +292,8 @@ function install_mcsmanager() {
     install_npm_packages "${daemon_install_path}";
     
     # Set permissions
+    sudo chown -R 1000:1000 "${web_install_path}";
+    sudo chown -R 1000:1000 "${daemon_install_path}";
     sudo chmod -R 755 "${web_install_path}";
     sudo chmod -R 755 "${daemon_install_path}";
     
