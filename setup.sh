@@ -24,16 +24,17 @@ node_version="v16.20.2";
 
 ## Script
 # DO NOT MODIFY
-old_install=false
-network=false
-public_ip=$(curl -s http://ipecho.net/plain)
-private_ip=$(hostname -i | awk '{print $1}')
+old_install=false;
+network=false;
+public_ip=$(curl -s http://ipecho.net/plain);
+private_ip=$(hostname -i | awk '{print $1}');
+arch=$(uname -m);
 
 
 ### Functions
 ## Utils
 # Logger
-print_log() {
+function print_log() {
     local level=$1;
     local message=$2;
     
@@ -67,24 +68,26 @@ print_log() {
 }
 
 # Error handler
-error_handler() {
+function error_handler() {
     local err_line=$1;
     print_log "FATAL" "An unexpected error occurred!";
-    print_log "FATAL" "Error line: ${err_line}";
+    print_log "DEBUG" "Error line: ${err_line}";
     exit 1;
 }
 
 trap 'error_handler "$LINENO"' ERR;
 
 # Migratior (WIP)
-migration_old_mcsmanager(){
+function migration_old_mcsmanager(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
 # Node dependency installer
-install_npm_packages() {
+function install_npm_packages() {
     local install_path=$1
+    print_log "DEBUG" "Installing NPM packages...";
+    print_log "DEBUG" "Install path: ${install_path}";
     if cd "${install_path}"; then
         /usr/bin/env "${node_install_path}"/bin/node "${node_install_path}"/bin/npm install --production --no-fund --no-audit > npm_install_log
     else
@@ -96,12 +99,17 @@ install_npm_packages() {
 }
 
 # Service file creator
-create_service_file() {
-    local file_name=$1
-    local service_name=$2
-    local working_directory=$3
+function create_service_file() {
+    local file_name=$1;
+    local service_name=$2;
+    local working_directory=$3;
+    print_log "DEBUG" "Creating service file...";
+    print_log "DEBUG" "File name: ${file_name}";
+    print_log "DEBUG" "Service name: ${service_name}";
+    print_log "DEBUG" "Working directory: ${working_directory}";
     # shellcheck disable=SC2250,SC2154
-        cat << EOF > "/etc/systemd/system/${file_name}"
+    if ${DEBUG}; then
+        cat << EOF | tee "/etc/systemd/system/${file_name}";
 [Unit]
 Description=${service_name}
 
@@ -115,14 +123,34 @@ Environment="PATH=${PATH}"
 [Install]
 WantedBy=multi-user.target
 EOF
+    else
+        cat << EOF > "/etc/systemd/system/${file_name}";
+[Unit]
+Description=${service_name}
+
+[Service]
+WorkingDirectory=${working_directory}
+ExecStart=${node_install_path}/bin/node app.js
+ExecReload=/bin/kill -s QUIT $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+Environment="PATH=${PATH}"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
     
     return 0;
 }
 
 # File downloader
-download_file(){
+function download_file(){
     local download_url=$1;
     local file_name=$2;
+    print_log "DEBUG" "Downloading file...";
+    print_log "DEBUG" "Download URL: ${download_url}";
+    print_log "DEBUG" "File name: ${file_name}";
+    print_log "DEBUG" "File saved path: ${tmp_path}/${file_name}";
     if ${DEBUG}; then
         wget "${download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -v -O "${tmp_path}/${file_name}";
     else
@@ -134,7 +162,7 @@ download_file(){
 
 ## Checks
 # Arch check
-check_arch(){
+function check_arch(){
     case "${arch}" in
         x86_64)
             arch=x64;
@@ -161,25 +189,25 @@ check_arch(){
 }
 
 # System check (WIP)
-check_system(){
+function check_system(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
 # Network check (WIP)
-check_network(){
+function check_network(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
 # Dependency check (WIP)
-check_deps(){
+function check_deps(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
 
 # Old installation check
-check_old_install(){
+function check_old_install(){
     if [[ -d "${root_install_path}" ]]; then
         old_install=true;
     fi
@@ -187,7 +215,7 @@ check_old_install(){
 
 ## Install
 # Node.js installer
-install_node() {
+function install_node() {
     print_log "INFO" "Installing Node.js ${node_version} ...";
     
     # Download Node.js
@@ -200,7 +228,7 @@ install_node() {
     offical_hash=$(grep "node-${node_version}-linux-${arch}.tar.gz" "${tmp_path}/node.sha256" | awk '{ print $1 }');
     file_hash=$(sha256sum "${tmp_path}/node.tar.gz" | awk '{ print $1 }');
     if [[ "${offical_hash}" != "${file_hash}" ]]; then
-        print_log "ERROR" "Node.js checksum failure!"
+        print_log "ERROR" "Node.js checksum failure!";
         print_log "ERROR" "Expected: ${offical_hash}";
         print_log "ERROR" "Actual: ${file_hash}";
         return 1;
@@ -217,7 +245,9 @@ install_node() {
     sudo chmod -R 755 "${node_install_path}";
     
     # Check Node.js installation
-    if [[ -f "${node_install_path}"/bin/node ]] && [[ "$("${node_install_path}"/bin/node -v)" == "${node_version}" ]]; then
+    print_log "DEBUG" Node.js version: "$("${node_install_path}/bin/node" -v)"
+    print_log "DEBUG" NPM version: "$("${node_install_path}/bin/node ${node_install_path}/bin/npm" -v)"
+    if [[ -f "${node_install_path}"/bin/node ]] && [[ "$("${node_install_path}/bin/node" -v)" == "${node_version}" ]]; then
         print_log "INFO" "Node.js ${node_version} installed successfully!";
     else
         print_log "ERROR" "Node.js installation failed!";
@@ -228,7 +258,7 @@ install_node() {
 }
 
 # MCSManager installer
-install_mcsmanager() {
+function install_mcsmanager() {
     print_log "INFO" "Installing MCSManager ...";
     
     # Download MCSManager
@@ -257,39 +287,43 @@ install_mcsmanager() {
     sudo mv -f "${tmp_path}/mcsmanger/daemon" "${daemon_install_path}";
     
     # Install dependencies
-    install_npm_packages "${web_install_path}"
-    install_npm_packages "${daemon_install_path}"
+    install_npm_packages "${web_install_path}";
+    install_npm_packages "${daemon_install_path}";
     
     # Set permissions
     sudo chmod -R 755 "${web_install_path}";
     sudo chmod -R 755 "${daemon_install_path}";
     
     # Register MCSManager services
-    sudo bash -c "$(declare -f create_service_file); create_service_file 'mcsm-web.service' 'MCSManager Web' '${web_install_path}'"
-    sudo bash -c "$(declare -f create_service_file); create_service_file 'mcsm-daemon.service' 'MCSManager Daemon' '${daemon_install_path}'"
-    sudo systemctl daemon-reload
+    sudo bash -c "$(declare -f create_service_file); create_service_file 'mcsm-web.service' 'MCSManager Web' '${web_install_path}'";
+    sudo bash -c "$(declare -f create_service_file); create_service_file 'mcsm-daemon.service' 'MCSManager Daemon' '${daemon_install_path}'";
+    sudo systemctl daemon-reload;
     
     return 0;
 }
 
 ### Main
+print_log "DEBUG" "Public IP: ${public_ip}";
+print_log "DEBUG" "Private IP: ${private_ip}";
+print_log "DEBUG" "Architecture: ${arch}";
+
 print_log "INFO" "+----------------------------------------------------------------------";
 print_log "INFO" "| MCSManager Installer";
 print_log "INFO" "+----------------------------------------------------------------------";
 
 # still in development
 
-print_log "INFO" "+----------------------------------------------------------------------"
-print_log "INFO" "| Installation is complete! Welcome to the MCSManager!!!"
-print_log "INFO" "|"
-print_log "INFO" "| HTTP Web Service: http://${public_ip}:23333 or http://${private_ip}:23333"
-print_log "INFO" "| Daemon Address: ws://${public_ip}:24444 or ws://${private_ip}:24444"
-print_log "INFO" "| You must expose ports 23333 and 24444 to use the service properly on the Internet."
-print_log "INFO" "|"
-print_log "INFO" "| Usage:"
-print_log "INFO" "| systemctl start mcsm-{daemon,web}.service"
-print_log "INFO" "| systemctl stop mcsm-{daemon,web}.service"
-print_log "INFO" "| systemctl restart mcsm-{daemon,web}.service"
-print_log "INFO" "|"
-print_log "INFO" "| Official Document: https://docs.mcsmanager.com/"
-print_log "INFO" "+----------------------------------------------------------------------"
+print_log "INFO" "+----------------------------------------------------------------------";
+print_log "INFO" "| Installation is complete! Welcome to the MCSManager!!!";
+print_log "INFO" "|";
+print_log "INFO" "| HTTP Web Service: http://${public_ip}:23333 or http://${private_ip}:23333";
+print_log "INFO" "| Daemon Address: ws://${public_ip}:24444 or ws://${private_ip}:24444";
+print_log "INFO" "| You must expose ports 23333 and 24444 to use the service properly on the Internet.";
+print_log "INFO" "|";
+print_log "INFO" "| Usage:";
+print_log "INFO" "| systemctl start mcsm-{daemon,web}.service";
+print_log "INFO" "| systemctl stop mcsm-{daemon,web}.service";
+print_log "INFO" "| systemctl restart mcsm-{daemon,web}.service";
+print_log "INFO" "|";
+print_log "INFO" "| Official Document: https://docs.mcsmanager.com/";
+print_log "INFO" "+----------------------------------------------------------------------";
