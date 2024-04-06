@@ -121,15 +121,6 @@ check_deps(){
     return 1;
 }
 
-# Root checker
-check_root(){
-    if [[ ${EUID} -ne 0 ]]; then
-        print_log "ERROR" "Please use the root user to execute this script!";
-        return 1;
-    fi
-    return 0;
-}
-
 # Old installation checker
 check_old_install(){
     if [[ -d "${root_install_path}" ]]; then
@@ -215,14 +206,13 @@ install_node() {
     
     # Install Node.js
     if ${DEBUG}; then
-        tar -zxvf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
+        sudo tar -zxvf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
     else
-        tar -zxf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
+        sudo tar -zxf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
     fi
     
     # Set permissions
-    chmod +x "${node_install_path}/bin/node";
-    chmod +x "${node_install_path}/bin/npm";
+    sudo chmod -R 755 "${node_install_path}";
     
     # Check Node.js installation
     if [[ -f "${node_install_path}"/bin/node ]] && [[ "$("${node_install_path}"/bin/node -v)" == "${node_version}" ]]; then
@@ -261,20 +251,21 @@ install_mcsmanager() {
     else
         tar -zxf "${tmp_path}/mcsmanager.tar.gz" -C "${tmp_path}/mcsmanger";
     fi
-    mv -f "${tmp_path}/mcsmanger/web" "${web_install_path}";
-    mv -f "${tmp_path}/mcsmanger/daemon" "${daemon_install_path}";
+    sudo mv -f "${tmp_path}/mcsmanger/web" "${web_install_path}";
+    sudo mv -f "${tmp_path}/mcsmanger/daemon" "${daemon_install_path}";
     
     # Install dependencies
     install_npm_packages "${web_install_path}"
     install_npm_packages "${daemon_install_path}"
     
     # Set permissions
-    chmod -R 755 /opt/mcsmanager/
+    sudo chmod -R 755 "${web_install_path}";
+    sudo chmod -R 755 "${daemon_install_path}";
     
     # Register MCSManager services
-    create_service_file "mcsm-web.service" "MCSManager-Web" "/opt/mcsmanager/web"
-    create_service_file "mcsm-daemon.service" "MCSManager-Daemon" "/opt/mcsmanager/daemon"
-    systemctl daemon-reload
+    sudo bash -c "$(declare -f create_service_file); create_service_file 'mcsm-web.service' 'MCSManager Web' '${web_install_path}'"
+    sudo bash -c "$(declare -f create_service_file); create_service_file 'mcsm-daemon.service' 'MCSManager Daemon' '${daemon_install_path}'"
+    sudo systemctl daemon-reload
     
     return 0;
 }
