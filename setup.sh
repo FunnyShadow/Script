@@ -101,6 +101,29 @@ check_arch(){
     return 0;
 }
 
+check_system(){
+    print_log "ERROR" "Not implemented yet";
+    return 1;
+}
+
+check_network(){
+    print_log "ERROR" "Not implemented yet";
+    return 1;
+}
+
+check_deps(){
+    print_log "ERROR" "Not implemented yet";
+    return 1;
+}
+
+check_root(){
+    print_log "ERROR" "Not implemented yet";
+    return 1;
+}
+migration_old_mcsmanager(){
+    print_log "ERROR" "Not implemented yet";
+    return 1;
+}
 
 [Service]
 WorkingDirectory=/opt/mcsmanager/web
