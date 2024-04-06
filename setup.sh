@@ -120,6 +120,13 @@ check_root(){
     print_log "ERROR" "Not implemented yet";
     return 1;
 }
+
+check_old_install(){
+    if [[ -d "${root_install_path}" ]]; then
+        old_install=true;
+    fi
+}
+
 migration_old_mcsmanager(){
     print_log "ERROR" "Not implemented yet";
     return 1;
