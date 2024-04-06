@@ -66,6 +66,15 @@ print_log() {
     esac
 }
 
+error_handler() {
+    local err_line=$1;
+    print_log "FATAL" "An unexpected error occurred!";
+    print_log "FATAL" "Error line: ${err_line}";
+    exit 1;
+}
+
+trap 'error_handler "$LINENO"' ERR;
+
 [Service]
 WorkingDirectory=/opt/mcsmanager/web
 ExecStart=${node_install_path}/bin/node app.js
