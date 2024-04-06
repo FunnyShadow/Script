@@ -76,58 +76,6 @@ error_handler() {
 
 trap 'error_handler "$LINENO"' ERR;
 
-# Arch checker
-check_arch(){
-    case "${arch}" in
-        x86_64)
-            arch=x64;
-        ;;
-        aarch64)
-            arch=arm64;
-        ;;
-        arm)
-            arch=armv7l;
-        ;;
-        ppc64le)
-            arch=ppc64le;
-        ;;
-        s390x)
-            arch=s390x;
-        ;;
-        *)
-            print_log "ERROR" "Unsupported architecture!";
-            print_log "ERROR" "Please try to install manually: https://github.com/MCSManager/MCSManager#linux";
-            return 1;
-        ;;
-    esac
-    return 0;
-}
-
-# System checker (WIP)
-check_system(){
-    print_log "ERROR" "Not implemented yet";
-    return 1;
-}
-
-# Network checker (WIP)
-check_network(){
-    print_log "ERROR" "Not implemented yet";
-    return 1;
-}
-
-# Dependency checker (WIP)
-check_deps(){
-    print_log "ERROR" "Not implemented yet";
-    return 1;
-}
-
-# Old installation checker
-check_old_install(){
-    if [[ -d "${root_install_path}" ]]; then
-        old_install=true;
-    fi
-}
-
 # Migratior (WIP)
 migration_old_mcsmanager(){
     print_log "ERROR" "Not implemented yet";
@@ -138,7 +86,7 @@ migration_old_mcsmanager(){
 install_npm_packages() {
     local install_path=$1
     if cd "${install_path}"; then
-        /usr/bin/env "${node_install_path}"/bin/node "${node_install_path}"/bin/npm install --production --no-fund --no-audit >npm_install_log
+        /usr/bin/env "${node_install_path}"/bin/node "${node_install_path}"/bin/npm install --production --no-fund --no-audit > npm_install_log
     else
         print_log "ERROR" "Failed to change directory to ${install_path}";
         return 1;
@@ -153,7 +101,7 @@ create_service_file() {
     local service_name=$2
     local working_directory=$3
     # shellcheck disable=SC2250,SC2154
-    cat << EOF > "/etc/systemd/system/${file_name}"
+        cat << EOF > "/etc/systemd/system/${file_name}"
 [Unit]
 Description=${service_name}
 
@@ -180,7 +128,61 @@ download_file(){
     else
         wget "${download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -O"${tmp_path}/${file_name}";
     fi
+    
     return 0;
+}
+
+## Checks
+# Arch check
+check_arch(){
+    case "${arch}" in
+        x86_64)
+            arch=x64;
+        ;;
+        aarch64)
+            arch=arm64;
+        ;;
+        arm)
+            arch=armv7l;
+        ;;
+        ppc64le)
+            arch=ppc64le;
+        ;;
+        s390x)
+            arch=s390x;
+        ;;
+        *)
+            print_log "ERROR" "Unsupported architecture!";
+            print_log "ERROR" "Please try to install manually: https://github.com/MCSManager/MCSManager#linux";
+            return 1;
+        ;;
+    esac
+    return 0;
+}
+
+# System check (WIP)
+check_system(){
+    print_log "ERROR" "Not implemented yet";
+    return 1;
+}
+
+# Network check (WIP)
+check_network(){
+    print_log "ERROR" "Not implemented yet";
+    return 1;
+}
+
+# Dependency check (WIP)
+check_deps(){
+    print_log "ERROR" "Not implemented yet";
+    return 1;
+}
+
+# Old installation check
+check_old_install(){
+    if [[ -d "${root_install_path}" ]]; then
+        old_install=true;
+    fi
 }
 
 ## Install
