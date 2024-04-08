@@ -362,9 +362,53 @@ function install_mcsmanager() {
     return 0;
 }
 
+## Main
+function main(){
     local public_ip
     local private_ip
     public_ip=$(curl -s http://ipecho.net/plain);
     private_ip=$(hostname -i | awk '{print $1}');
     print_log "DEBUG" "Public IP: ${public_ip}";
-    print_log "DEBUG" "Private IP: ${private_ip}";
+    
+    print_log "INFO" "+----------------------------------------------------------------------";
+    print_log "INFO" "| MCSManager Installer";
+    print_log "INFO" "+----------------------------------------------------------------------";
+    
+    # Check if the installation directory exists
+    if [[ -d ${root_install_path} ]]; then
+        update=true;
+        cleaner;
+    fi
+    
+    # Basic checks
+    check_arch;
+    check_system;
+    check_deps;
+    
+    # Install
+    install_node;
+    install_mcsmanager;
+    
+    if ${update}; then
+        migration
+        sudo systemctl enable --now mcsm-{web,daemon}.service
+    fi
+    
+    print_log "INFO" "+----------------------------------------------------------------------";
+    print_log "INFO" "| Installation is complete! Welcome to the MCSManager!!!";
+    print_log "INFO" "|";
+    print_log "INFO" "| HTTP Web Service: http://${public_ip}:23333 or http://${private_ip}:23333";
+    print_log "INFO" "| Daemon Address: ws://${public_ip}:24444 or ws://${private_ip}:24444";
+    print_log "INFO" "| You must expose ports 23333 and 24444 to use the service properly on the Internet.";
+    print_log "INFO" "|";
+    print_log "INFO" "| Usage:";
+    print_log "INFO" "| systemctl start mcsm-{daemon,web}.service";
+    print_log "INFO" "| systemctl stop mcsm-{daemon,web}.service";
+    print_log "INFO" "| systemctl restart mcsm-{daemon,web}.service";
+    print_log "INFO" "|";
+    print_log "INFO" "| Official Document: https://docs.mcsmanager.com/";
+    print_log "INFO" "+----------------------------------------------------------------------";
+}
+
+### Entrypoint
+main
