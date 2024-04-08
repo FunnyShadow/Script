@@ -115,7 +115,6 @@ function migration(){
 # Node dependency installer
 function install_npm_packages() {
     local install_path=$1
-    print_log "DEBUG" "Installing NPM packages...";
     print_log "DEBUG" "Install path: ${install_path}";
     if cd "${install_path}"; then
         /usr/bin/env "${node_install_path}"/bin/node "${node_install_path}"/bin/npm install --production --no-fund --no-audit > npm_install_log
@@ -123,7 +122,6 @@ function install_npm_packages() {
         print_log "ERROR" "Failed to change directory to ${install_path}";
         return 1;
     fi
-    
     return 0;
 }
 
@@ -132,7 +130,6 @@ function create_service_file() {
     local file_name=$1;
     local service_name=$2;
     local working_directory=$3;
-    print_log "DEBUG" "Creating service file...";
     print_log "DEBUG" "File name: ${file_name}";
     print_log "DEBUG" "Service name: ${service_name}";
     print_log "DEBUG" "Working directory: ${working_directory}";
@@ -176,7 +173,6 @@ EOF
 function download_file(){
     local download_url=$1;
     local file_name=$2;
-    print_log "DEBUG" "Downloading file...";
     print_log "DEBUG" "Download URL: ${download_url}";
     print_log "DEBUG" "File name: ${file_name}";
     print_log "DEBUG" "File saved path: ${tmp_path}/${file_name}";
@@ -185,7 +181,6 @@ function download_file(){
     else
         wget "${download_url}" -q --progress=bar:force -c --retry-connrefused -t 5 -O"${tmp_path}/${file_name}";
     fi
-    
     return 0;
 }
 
@@ -271,10 +266,12 @@ function install_node() {
     print_log "INFO" "Installing Node.js ${node_version} ...";
     
     # Download Node.js
+    print_log "INFO" "Downloading Node.js file..."
     download_file "${node_download_url}" "node.tar.gz";
     download_file "${node_hash_url}" "node.sha256";
     
     # Check Node.js integrity
+    print_log "INFO" "Checking Node.js file integrity..."
     local offical_hash
     local file_hash
     offical_hash=$(grep "node-${node_version}-linux-${arch}.tar.gz" "${tmp_path}/node.sha256" | awk '{ print $1 }');
@@ -287,6 +284,7 @@ function install_node() {
     fi
     
     # Install Node.js
+    print_log "INFO" "Installing Node.js..."
     if ${DEBUG}; then
         sudo tar -zxvf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
     else
@@ -294,6 +292,7 @@ function install_node() {
     fi
     
     # Set permissions
+    print_log "INFO" "Setting permissions..."
     sudo chown -R 1000:1000 "${node_install_path}";
     sudo chmod -R 755 "${node_install_path}";
     
@@ -306,7 +305,6 @@ function install_node() {
         print_log "ERROR" "Node.js installation failed!";
         return 1;
     fi
-    
     return 0;
 }
 
@@ -315,10 +313,12 @@ function install_mcsmanager() {
     print_log "INFO" "Installing MCSManager ...";
     
     # Download MCSManager
+    print_log "INFO" "Downloading MCSManager file..."
     download_file "${mcsmanager_download_url}" "mcsmanager.tar.gz";
     download_file "${mcsmanager_hash_url}" "mcsmanager.sha256";
     
     # Check MCSManager integrity
+    print_log "INFO" "Checking MCSManager file integrity..."
     local offical_hash
     local file_hash
     offical_hash=$(cat "${tmp_path}/mcsmanager.sha256");
@@ -331,6 +331,7 @@ function install_mcsmanager() {
     fi
     
     # Install MCSManager
+    print_log "INFO" "Installing MCSManager..."
     if ${DEBUG}; then
         tar -zxvf "${tmp_path}/mcsmanager.tar.gz" -C "${tmp_path}/mcsmanger";
     else
@@ -340,6 +341,7 @@ function install_mcsmanager() {
     sudo mv -f "${tmp_path}/mcsmanger/daemon" "${daemon_install_path}";
     
     # Install dependencies
+    print_log "INFO" "Installing MCSManager dependencies..."
     install_npm_packages "${web_install_path}";
     install_npm_packages "${daemon_install_path}";
     
@@ -358,7 +360,6 @@ function install_mcsmanager() {
     sudo bash -c "$(declare -f create_service_file); create_service_file 'mcsm-web.service' 'MCSManager Web' '${web_install_path}'";
     sudo bash -c "$(declare -f create_service_file); create_service_file 'mcsm-daemon.service' 'MCSManager Daemon' '${daemon_install_path}'";
     sudo systemctl daemon-reload;
-    
     return 0;
 }
 
@@ -369,6 +370,7 @@ function main(){
     public_ip=$(curl -s http://ipecho.net/plain);
     private_ip=$(hostname -i | awk '{print $1}');
     print_log "DEBUG" "Public IP: ${public_ip}";
+    print_log "DEBUG" "Private IP: ${private_ip}";
     
     print_log "INFO" "+----------------------------------------------------------------------";
     print_log "INFO" "| MCSManager Installer";
