@@ -249,6 +249,18 @@ function check_deps(){
             return 1;
         ;;
     esac
+## Init
+function init(){
+    # Creating file directories
+    [[ -d ${root_install_path} ]] && mkdir "${root_install_path}";
+    [[ -d ${node_install_path} ]] && mkdir "${node_install_path}";
+    
+    # Add user
+    [[ ${DEBUG} = true ]] && id "mcsmanager";
+    if ! id "mcsmanager" &>/dev/null; then
+        sudo useradd -r -s /bin/false -U mcsmanager;
+    fi
+    return 0;
 }
 
 ## Install
@@ -336,10 +348,6 @@ function install_mcsmanager() {
     install_npm_packages "${web_install_path}";
     install_npm_packages "${daemon_install_path}";
     
-    # Add user
-    print_log "INFO" "Adding user..."
-    sudo useradd -r -s /bin/false -U mcsmanager;
-    
     # Set permissions
     print_log "INFO" "Setting permissions..."
     sudo chown -R mcsmanager:mcsmanager "${web_install_path}";
@@ -387,6 +395,9 @@ function main(){
     check_arch;
     check_system;
     check_deps;
+    
+    # Init environment
+    init;
     
     # Install
     install_node;
