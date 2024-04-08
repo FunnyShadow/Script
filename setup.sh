@@ -221,16 +221,27 @@ function check_arch(){
     return 0;
 }
 
-# System check (WIP)
+# System check
 function check_system(){
-    print_log "ERROR" "Not implemented yet";
-    return 1;
-}
-
-# Network check (WIP)
-function check_network(){
-    print_log "ERROR" "Not implemented yet";
-    return 1;
+    local os
+    os=$(uname)
+    print_log "DEBUG" "System Type: ${os}";
+    if [[ "${os}" == "Linux" ]]; then
+        # shellcheck source=/etc/os-release
+        . /etc/os-release;
+        print_log "DEBUG" "System ID: ${ID}";
+        print_log "DEBUG" "System Name: ${PRETTY_NAME}";
+        if [[ ${ID} != "ubuntu" ]] && [[ ${ID} != "debian" ]] && [[ ${ID} != "centos" ]] && [[ ${ID} != "fedora" ]] && [[ ${ID} != "rocky" ]]; then
+            print_log "ERROR" "Unsupported system!";
+            print_log "ERROR" "Please try to install manually:https://github.com/MCSManager/MCSManager#linux";
+            return 1;
+        fi
+    else
+        print_log "ERROR" "Unsupported system!";
+        print_log "ERROR" "Please try to install manually:https://github.com/MCSManager/MCSManager#linux";
+        return 1;
+    fi
+    return 0;
 }
 
 # Dependency check (WIP)
