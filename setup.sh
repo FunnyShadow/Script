@@ -343,9 +343,14 @@ function install_mcsmanager() {
     install_npm_packages "${web_install_path}";
     install_npm_packages "${daemon_install_path}";
     
+    # Add user
+    print_log "INFO" "Adding user..."
+    sudo useradd -r -s /bin/false -U mcsmanager;
+    
     # Set permissions
-    sudo chown -R 1000:1000 "${web_install_path}";
-    sudo chown -R 1000:1000 "${daemon_install_path}";
+    print_log "INFO" "Setting permissions..."
+    sudo chown -R mcsmanager:mcsmanager "${web_install_path}";
+    sudo chown -R mcsmanager:mcsmanager "${daemon_install_path}";
     sudo chmod -R 755 "${web_install_path}";
     sudo chmod -R 755 "${daemon_install_path}";
     
