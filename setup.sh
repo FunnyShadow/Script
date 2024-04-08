@@ -92,12 +92,12 @@ function migration(){
     print_log "DEBUG" "Backup: ${is_backup}";
     if ${is_backup}; then
         print_log "INFO" "Backing up MCSManager data...";
-        sudo mv -f "${root_install_path}/web/data" "${tmp_path}/data/web";
-        sudo mv -f "${root_install_path}/daemon/data" "${tmp_path}/data/daemon";
+        [[ -d "${web_install_path}/data" ]] && sudo mv -f "${web_install_path}/data" "${tmp_path}/data/web";
+        [[ -d "${daemon_install_path}/data" ]] && sudo mv -f "${daemon_install_path}/data" "${tmp_path}/data/daemon";
     else
-        print_log "INFO" "Recovering MCSManager data..."
-        sudo mv -f "${tmp_path}/data/web" "${root_install_path}/web/data";
-        sudo mv -f "${tmp_path}/data/daemon" "${root_install_path}/daemon/data";
+        print_log "INFO" "Recovering MCSManager data...";
+        [[ -d "${tmp_path}/data/web" ]] && sudo mv -f "${tmp_path}/data/web" "${web_install_path}/data";
+        [[ -d "${tmp_path}/data/daemon" ]] && sudo mv -f "${tmp_path}/data/daemon" "${daemon_install_path}/daemon/data";
     fi
     return 0;
 }
