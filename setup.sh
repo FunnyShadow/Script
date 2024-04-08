@@ -1,7 +1,6 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2312
-# shellcheck enable=all
-###########################
+# shellcheck disable=SC2034,SC2312,SC1091
+#########################################
 ### Variables
 ## Features
 DEBUG=false;
