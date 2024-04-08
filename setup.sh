@@ -161,20 +161,20 @@ function check_arch(){
     arch=$(uname -m);
     print_log "DEBUG" "Original architecture: ${arch}";
     case "${arch}" in
-        x86_64)
-            arch=x64;
+        "x86_64")
+            arch="x64";
         ;;
-        aarch64)
-            arch=arm64;
+        "aarch64")
+            arch="arm64";
         ;;
-        arm)
-            arch=armv7l;
+        "arm")
+            arch="armv7l";
         ;;
-        ppc64le)
-            arch=ppc64le;
+        "ppc64le")
+            arch="ppc64le";
         ;;
-        s390x)
-            arch=s390x;
+        "s390x")
+            arch="s390x";
         ;;
         *)
             print_log "ERROR" "Unsupported architecture!";
@@ -182,6 +182,7 @@ function check_arch(){
             return 1;
         ;;
     esac
+    print_log "DEBUG" "Converted architecture: ${arch}"
     return 0;
 }
 
