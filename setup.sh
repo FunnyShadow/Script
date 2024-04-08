@@ -76,6 +76,8 @@ function cleaner(){
     # Stop MCSManager service
     print_log "INFO" "Stop the MCSManager service...";
     sudo systemctl disable --now mcsm-{daemon,web}.service;
+    
+    # Backup old MCSManager data
     migration true;
     
     # Cleanup old MCSManager
