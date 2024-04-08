@@ -73,15 +73,6 @@ trap 'error_handler "$LINENO"' ERR;
 
 # Cleaner
 function cleaner(){
-    # Check if the installation method is docker
-    print_log "INFO" "Checking for Docker installation...";
-    if [[ -f "${root_install_path}/docker-compose.yml" ]]; then
-        print_log "WARN" "Docker installation detected!";
-        print_log "WARN" "Please use the Docker update method provided in the official documentation to update MCSManager!";
-        print_log "WARN" "Official Documentation: https://docs.mcsmanager.com/";
-        return 1;
-    fi
-    
     # Stop MCSManager service
     print_log "INFO" "Stop the MCSManager service...";
     sudo systemctl disable --now mcsm-{daemon,web}.service;
@@ -378,6 +369,16 @@ function main(){
     
     # Check if the installation directory exists
     if [[ -d ${root_install_path} ]]; then
+        # Check if the installation method is docker
+        print_log "INFO" "Checking for Docker installation...";
+        if [[ -f "${root_install_path}/docker-compose.yml" ]]; then
+            print_log "WARN" "Docker installation detected!";
+            print_log "WARN" "Please use the Docker update method provided in the official documentation to update MCSManager!";
+            print_log "WARN" "Official Documentation: https://docs.mcsmanager.com/";
+            return 1;
+        fi
+        
+        # Uninstall old mcsmanager (simultaneous data migration)
         update=true;
         cleaner;
     fi
