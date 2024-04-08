@@ -292,9 +292,9 @@ function install_node() {
     # Install Node.js
     print_log "INFO" "Installing Node.js...";
     if ${DEBUG}; then
-        sudo tar -zxvf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
+        sudo tar -zxvf "${tmp_path}/node.tar.gz" -C "${node_install_path}" --strip-components=1;
     else
-        sudo tar -zxf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
+        sudo tar -zxf "${tmp_path}/node.tar.gz" -C "${node_install_path}" --strip-components=1;
     fi
     
     # Set permissions
