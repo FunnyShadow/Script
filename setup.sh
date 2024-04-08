@@ -105,7 +105,8 @@ function migration(){
 
 # Node dependency installer
 function install_npm_packages() {
-    local install_path=$1
+    local install_path;
+    install_path="$1";
     print_log "DEBUG" "Install path: ${install_path}";
     if cd "${install_path}"; then
         /usr/bin/env "${node_install_path}"/bin/node "${node_install_path}"/bin/npm install --production --no-fund --no-audit > npm_install_log
@@ -156,7 +157,6 @@ Environment="PATH=${PATH}"
 WantedBy=multi-user.target
 EOF
     fi
-    
     return 0;
 }
 
@@ -178,7 +178,7 @@ function download_file(){
 ## Checks
 # Arch check
 function check_arch(){
-    local arch
+    local arch;
     arch=$(uname -m);
     print_log "DEBUG" "Original architecture: ${arch}";
     case "${arch}" in
@@ -203,14 +203,14 @@ function check_arch(){
             return 1;
         ;;
     esac
-    print_log "DEBUG" "Converted architecture: ${arch}"
+    print_log "DEBUG" "Converted architecture: ${arch}";
     return 0;
 }
 
 # System check
 function check_system(){
-    local os
-    os=$(uname)
+    local os;
+    os=$(uname);
     print_log "DEBUG" "System Type: ${os}";
     if [[ "${os}" == "Linux" ]]; then
         # shellcheck source=/etc/os-release
@@ -236,12 +236,12 @@ function check_deps(){
     print_log "DEBUG" "System Name: ${PRETTY_NAME}";
     case "${ID}" in
         "ubuntu" | "debian")
-            sudo apt-get update
-            sudo apt-get install git tar -y
+            sudo apt-get update;
+            sudo apt-get install wget git tar -y;
         ;;
         "centos" | "fedora" | "rocky")
-            sudo yum update
-            sudo yum install git tar -y
+            sudo yum update;
+            sudo yum install wget git tar -y;
         ;;
         *)
             print_log "ERROR" "Unsupported system!";
@@ -249,6 +249,9 @@ function check_deps(){
             return 1;
         ;;
     esac
+    return 0;
+}
+
 ## Init
 function init(){
     # Creating file directories
@@ -269,14 +272,14 @@ function install_node() {
     print_log "INFO" "Installing Node.js ${node_version} ...";
     
     # Download Node.js
-    print_log "INFO" "Downloading Node.js file..."
+    print_log "INFO" "Downloading Node.js file...";
     download_file "${node_download_url}" "node.tar.gz";
     download_file "${node_hash_url}" "node.sha256";
     
     # Check Node.js integrity
-    print_log "INFO" "Checking Node.js file integrity..."
-    local offical_hash
-    local file_hash
+    print_log "INFO" "Checking Node.js file integrity...";
+    local offical_hash;
+    local file_hash;
     offical_hash=$(grep "node-${node_version}-linux-${arch}.tar.gz" "${tmp_path}/node.sha256" | awk '{ print $1 }');
     file_hash=$(sha256sum "${tmp_path}/node.tar.gz" | awk '{ print $1 }');
     if [[ "${offical_hash}" != "${file_hash}" ]]; then
@@ -287,7 +290,7 @@ function install_node() {
     fi
     
     # Install Node.js
-    print_log "INFO" "Installing Node.js..."
+    print_log "INFO" "Installing Node.js...";
     if ${DEBUG}; then
         sudo tar -zxvf "${tmp_path}/node.tar.gz" -C "${node_install_path}";
     else
@@ -295,13 +298,13 @@ function install_node() {
     fi
     
     # Set permissions
-    print_log "INFO" "Setting permissions..."
-    sudo chown -R 1000:1000 "${node_install_path}";
+    print_log "INFO" "Setting permissions...";
+    sudo chown -R mcsmanager:mcsmanager "${node_install_path}";
     sudo chmod -R 755 "${node_install_path}";
     
     # Check Node.js installation
-    print_log "DEBUG" Node.js version: "$("${node_install_path}/bin/node" -v)"
-    print_log "DEBUG" NPM version: "$("${node_install_path}/bin/node ${node_install_path}/bin/npm" -v)"
+    print_log "DEBUG" Node.js version: "$("${node_install_path}/bin/node" -v)";
+    print_log "DEBUG" NPM version: "$("${node_install_path}/bin/node ${node_install_path}/bin/npm" -v)";
     if [[ -f "${node_install_path}"/bin/node ]] && [[ "$("${node_install_path}/bin/node" -v)" == "${node_version}" ]]; then
         print_log "INFO" "Node.js ${node_version} installed successfully!";
     else
@@ -316,14 +319,14 @@ function install_mcsmanager() {
     print_log "INFO" "Installing MCSManager ...";
     
     # Download MCSManager
-    print_log "INFO" "Downloading MCSManager file..."
+    print_log "INFO" "Downloading MCSManager file...";
     download_file "${mcsmanager_download_url}" "mcsmanager.tar.gz";
     download_file "${mcsmanager_hash_url}" "mcsmanager.sha256";
     
     # Check MCSManager integrity
-    print_log "INFO" "Checking MCSManager file integrity..."
-    local offical_hash
-    local file_hash
+    print_log "INFO" "Checking MCSManager file integrity...";
+    local offical_hash;
+    local file_hash;
     offical_hash=$(cat "${tmp_path}/mcsmanager.sha256");
     file_hash=$(sha256sum "${tmp_path}/mcsmanager.tar.gz" | awk '{ print $1 }');
     if [[ "${offical_hash}" != "${file_hash}" ]]; then
@@ -334,7 +337,7 @@ function install_mcsmanager() {
     fi
     
     # Install MCSManager
-    print_log "INFO" "Installing MCSManager..."
+    print_log "INFO" "Installing MCSManager...";
     if ${DEBUG}; then
         tar -zxvf "${tmp_path}/mcsmanager.tar.gz" -C "${tmp_path}/mcsmanger";
     else
@@ -422,6 +425,7 @@ function main(){
     print_log "INFO" "|";
     print_log "INFO" "| Official Document: https://docs.mcsmanager.com/";
     print_log "INFO" "+----------------------------------------------------------------------";
+    return 0;
 }
 
 ### Entrypoint
