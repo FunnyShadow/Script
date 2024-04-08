@@ -71,11 +71,46 @@ function error_handler() {
 
 trap 'error_handler "$LINENO"' ERR;
 
-# Migratior (WIP)
-function migration_old_mcsmanager(){
-    print_log "ERROR" "Not implemented yet";
-    return 1;
+# Cleaner
+function cleaner(){
+    # Check if the installation method is docker
+    print_log "INFO" "Checking for Docker installation...";
+    if [[ -f "${root_install_path}/docker-compose.yml" ]]; then
+        print_log "WARN" "Docker installation detected!";
+        print_log "WARN" "Please use the Docker update method provided in the official documentation to update MCSManager!";
+        print_log "WARN" "Official Documentation: https://docs.mcsmanager.com/";
+        return 1;
+    fi
+    
+    # Stop MCSManager service
+    print_log "INFO" "Stop the MCSManager service...";
+    sudo systemctl disable --now mcsm-{daemon,web}.service;
+    migration true;
+    
+    # Cleanup old MCSManager
+    print_log "INFO" "Cleaning up old MCSManager...";
+    sudo rm -rf "${root_install_path}";
+    sudo rm -f /etc/systemd/system/mcsm-{daemon,web}.service;
+    return 0;
 }
+
+# Migration
+function migration(){
+    local is_backup;
+    is_backup="$1";
+    print_log "DEBUG" "Backup: ${is_backup}";
+    if ${is_backup}; then
+        print_log "INFO" "Backing up MCSManager data...";
+        sudo mv -f "${root_install_path}/web/data" "${tmp_path}/data/web";
+        sudo mv -f "${root_install_path}/daemon/data" "${tmp_path}/data/daemon";
+    else
+        print_log "INFO" "Recovering MCSManager data..."
+        sudo mv -f "${tmp_path}/data/web" "${root_install_path}/web/data";
+        sudo mv -f "${tmp_path}/data/daemon" "${root_install_path}/daemon/data";
+    fi
+    return 0;
+}
+
 
 # Node dependency installer
 function install_npm_packages() {
