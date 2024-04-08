@@ -244,17 +244,25 @@ function check_system(){
     return 0;
 }
 
-# Dependency check (WIP)
+# Dependency check and installation
 function check_deps(){
-    print_log "ERROR" "Not implemented yet";
-    return 1;
-}
-
-# Old installation check
-function check_old_install(){
-    if [[ -d "${root_install_path}" ]]; then
-        old_install=true;
-    fi
+    print_log "DEBUG" "System ID: ${ID}";
+    print_log "DEBUG" "System Name: ${PRETTY_NAME}";
+    case "${ID}" in
+        "ubuntu" | "debian")
+            sudo apt-get update
+            sudo apt-get install git tar -y
+        ;;
+        "centos" | "fedora" | "rocky")
+            sudo yum update
+            sudo yum install git tar -y
+        ;;
+        *)
+            print_log "ERROR" "Unsupported system!";
+            print_log "ERROR" "Please try to install manually:https://github.com/MCSManager/MCSManager#linux";
+            return 1;
+        ;;
+    esac
 }
 
 ## Install
